@@ -32,6 +32,7 @@ const lastUpdatedTimeEl = document.getElementById('last-updated-time');
 const syncStatusTextEl = document.getElementById('sync-status-text');
 const syncIndicatorEl = document.querySelector('.status-indicator');
 const exportCsvBtn = document.getElementById('export-csv-btn');
+const themeToggle = document.getElementById('theme-toggle');
 
 // Stats DOM Elements
 const statTotal = document.getElementById('stat-total');
@@ -86,6 +87,28 @@ function setupEventListeners() {
         currentSortOrder = e.target.value;
         applyFiltersAndRender();
     });
+    
+    // Theme toggle handler
+    if (themeToggle) {
+        // Load preference from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            themeToggle.checked = true;
+            document.body.classList.add('light-theme');
+        }
+        
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+                showToast('Switched to Light Mode', 'success');
+            } else {
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+                showToast('Switched to Dark Mode', 'success');
+            }
+        });
+    }
     
     // Modal handlers
     closeModalBtn.addEventListener('click', closeTweetModal);
