@@ -254,6 +254,18 @@ body {
     border: 1px solid transparent;
 }
 
+.btn-sm {
+    font-size: 0.82rem;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    gap: 6px;
+}
+
+.btn-sm .btn-icon {
+    width: 14px;
+    height: 14px;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-indigo) 100%);
     color: white;
@@ -600,6 +612,12 @@ body {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
+}
+
+.stream-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .stream-sorting {

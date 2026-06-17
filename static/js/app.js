@@ -31,6 +31,7 @@ const toastContainer = document.getElementById('toast-container');
 const lastUpdatedTimeEl = document.getElementById('last-updated-time');
 const syncStatusTextEl = document.getElementById('sync-status-text');
 const syncIndicatorEl = document.querySelector('.status-indicator');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 
 // Stats DOM Elements
 const statTotal = document.getElementById('stat-total');
@@ -61,6 +62,9 @@ function setupEventListeners() {
     refreshBtn.addEventListener('click', () => fetchReleaseNotes(true));
     retryBtn.addEventListener('click', () => fetchReleaseNotes(true));
     resetFiltersBtn.addEventListener('click', resetFilters);
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCSV);
+    }
     
     // Search input handlers
     searchInput.addEventListener('input', (e) => {
@@ -396,12 +400,12 @@ function renderStream() {
                         </svg>
                         <span>Copy Link</span>
                     </button>
-                    <button class="item-action-btn copy-text-btn" title="Copy text content">
+                    <button class="item-action-btn copy-text-btn" title="Copy content to clipboard">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
-                        <span>Copy Text</span>
+                        <span>Copy to Clipboard</span>
                     </button>
                     <button class="item-action-btn tweet-btn" title="Tweet this release note">
                         <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -418,7 +422,7 @@ function renderStream() {
             });
             
             itemCard.querySelector('.copy-text-btn').addEventListener('click', () => {
-                copyToClipboard(item.text, 'Content text copied!');
+                copyToClipboard(item.text, 'Content copied to clipboard!');
             });
             
             itemCard.querySelector('.tweet-btn').addEventListener('click', () => {
@@ -583,5 +587,60 @@ function updateTweetCharCount() {
     } else {
         charCounter.classList.remove('exceeded');
         charWarning.style.display = 'none';
+    }
+}
+
+// Export Stream data to CSV
+function exportToCSV() {
+    if (filteredNotesData.length === 0) {
+        showToast('No data available to export.', 'error');
+        return;
+    }
+    
+    // CSV Header row
+    const headers = ['Date', 'Category', 'Direct URL', 'Content Description'];
+    let csvRows = [headers.join(',')];
+    
+    filteredNotesData.forEach(entry => {
+        entry.items.forEach(item => {
+            // Helper to clean values for CSV compliance (escaping double quotes & flattening linebreaks)
+            const clean = (val) => {
+                if (val === null || val === undefined) return '""';
+                let stringVal = String(val);
+                // Double quotes are escaped by doubling them
+                stringVal = stringVal.replace(/"/g, '""');
+                // Replace hard returns with spaces to keep CSV formatting intact
+                stringVal = stringVal.replace(/\r?\n|\r/g, ' ');
+                return `"${stringVal}"`;
+            };
+            
+            const row = [
+                clean(entry.date),
+                clean(item.type),
+                clean(entry.link),
+                clean(item.text)
+            ];
+            
+            csvRows.push(row.join(','));
+        });
+    });
+    
+    const csvContent = csvRows.join('\n');
+    
+    try {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `bigquery_release_notes_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('CSV file downloaded successfully!', 'success');
+    } catch (error) {
+        console.error('CSV Export Error:', error);
+        showToast('Failed to export CSV.', 'error');
     }
 }
